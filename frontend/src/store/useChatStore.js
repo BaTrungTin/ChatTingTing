@@ -55,15 +55,29 @@ export const useChatStore = create((set, get) => ({
   listenMessages: () => {
     const { selectedUser } = get();
     if (!selectedUser) return;
-    const socket = useAuthStore.getState().socket; // fix tên
+    const socket = useAuthStore.getState().socket;
     socket.on("newMessage", (newMessage) => {
-      set({ messages: [...get().messages, newMessage] }); // fix messages
+      set({ messages: [...get().messages, newMessage] });
     });
   },
 
   notListenMessages: () => {
-    const socket = useAuthStore.getState().socket; // fix tên
+    const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+  },
+
+  listenOnlineUsers: () => {
+    const socket = useAuthStore.getState().socket;
+    socket.on("getOnlineUsers", (onlineUserIds) => {
+      console.log("ChatStore received online users:", onlineUserIds);
+      // Refresh danh sách user khi có thay đổi online status
+      get().getUsers();
+    });
+  },
+
+  notListenOnlineUsers: () => {
+    const socket = useAuthStore.getState().socket;
+    socket.off("getOnlineUsers");
   },
 
   setSelectedUser: (user) => set({ selectedUser: user }),

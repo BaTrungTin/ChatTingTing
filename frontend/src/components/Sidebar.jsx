@@ -5,13 +5,26 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
-    useChatStore();
+  const {
+    getUsers,
+    users,
+    selectedUser,
+    setSelectedUser,
+    isUsersLoading,
+    listenOnlineUsers,
+    notListenOnlineUsers,
+  } = useChatStore();
+
   const { onlineUsers } = useAuthStore();
 
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    listenOnlineUsers();
+
+    return () => {
+      notListenOnlineUsers();
+    };
+  }, [getUsers, listenOnlineUsers, notListenOnlineUsers]);
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -29,7 +42,8 @@ const Sidebar = () => {
       <div className="overflow-y-auto w-full py-3">
         {users.length > 0 ? (
           users.map((user) => {
-            const isOnline = onlineUsers.includes(user._id);
+            // Ép cả 2 về string để so sánh chắc chắn
+            const isOnline = onlineUsers.includes(user._id?.toString());
 
             return (
               <button

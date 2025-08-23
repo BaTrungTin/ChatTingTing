@@ -52,10 +52,30 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      const uploadResponse = await cloudinary.uploader.upload(image, {
-        folder: "chat_images",
-      });
-      imageUrl = uploadResponse.secure_url;
+      // Kiểm tra xem có phải là base64 image không
+      if (image.startsWith('data:image')) {
+        // Lưu trực tiếp base64 image
+        imageUrl = image;
+      } else {
+        // Thử upload lên Cloudinary nếu có cấu hình
+        try {
+          if (process.env.CLOUDINARY_CLOUD_NAME && 
+              process.env.CLOUDINARY_API_KEY && 
+              process.env.CLOUDINARY_API_SECRET) {
+            const uploadResponse = await cloudinary.uploader.upload(image, {
+              folder: "chat_images",
+            });
+            imageUrl = uploadResponse.secure_url;
+          } else {
+            // Fallback: lưu URL trực tiếp
+            imageUrl = image;
+          }
+        } catch (cloudinaryError) {
+          console.log("Cloudinary upload failed, using direct URL:", cloudinaryError.message);
+          // Fallback: lưu URL trực tiếp
+          imageUrl = image;
+        }
+      }
     }
 
     const newMessage = new Message({
@@ -79,3 +99,5 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+

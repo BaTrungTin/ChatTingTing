@@ -94,14 +94,48 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Profile pic is required" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
-    const updateUser = await User.findByIdAndUpdate(
-      userId,
-      { profilePic: uploadResponse.secure_url },
-      { new: true }
-    );
-
-    res.status(200).json(updateUser);
+    // Kiểm tra xem có phải là base64 image không
+    if (profilePic.startsWith('data:image')) {
+      // Lưu trực tiếp base64 image
+      const updateUser = await User.findByIdAndUpdate(
+        userId,
+        { profilePic: profilePic },
+        { new: true }
+      );
+      res.status(200).json(updateUser);
+    } else {
+      // Thử upload lên Cloudinary nếu có cấu hình
+      try {
+        if (process.env.CLOUDINARY_CLOUD_NAME && 
+            process.env.CLOUDINARY_API_KEY && 
+            process.env.CLOUDINARY_API_SECRET) {
+          const uploadResponse = await cloudinary.uploader.upload(profilePic);
+          const updateUser = await User.findByIdAndUpdate(
+            userId,
+            { profilePic: uploadResponse.secure_url },
+            { new: true }
+          );
+          res.status(200).json(updateUser);
+        } else {
+          // Fallback: lưu URL trực tiếp
+          const updateUser = await User.findByIdAndUpdate(
+            userId,
+            { profilePic: profilePic },
+            { new: true }
+          );
+          res.status(200).json(updateUser);
+        }
+      } catch (cloudinaryError) {
+        console.log("Cloudinary upload failed, using direct URL:", cloudinaryError.message);
+        // Fallback: lưu URL trực tiếp
+        const updateUser = await User.findByIdAndUpdate(
+          userId,
+          { profilePic: profilePic },
+          { new: true }
+        );
+        res.status(200).json(updateUser);
+      }
+    }
   } catch (error) {
     console.log("error in update profile ; ", error);
     res.status(500).json({ message: "Internal server error" });

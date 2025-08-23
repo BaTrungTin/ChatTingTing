@@ -2,8 +2,9 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+
 const BASE_URL =
-  import.meta.env.MODE === "development" ? "http://localhost:5001/api" : "/";
+  import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -21,7 +22,7 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
-      console.log("Error khi checkAuth", error);
+      console.log("❌ Error khi checkAuth", error);
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -80,13 +81,14 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Profile updated");
     } catch (error) {
-      console.log("Error updating profile:", error);
+      console.log("❌ Error updating profile:", error);
       toast.error(error?.response?.data?.message || "Failed to update profile");
     } finally {
       set({ isUpdatingProfile: false });
     }
   },
 
+  // Kết nối socket
   connectSocket: () => {
     const { authUser, socket } = get();
     if (!authUser) return;
@@ -94,11 +96,11 @@ export const useAuthStore = create((set, get) => ({
     if (!socket) {
       const newSocket = io(BASE_URL, {
         withCredentials: true,
-        query: { userId: authUser._id },
+        query: { userId: authUser._id.toString() }, // 👈 ép string
       });
 
       newSocket.on("getOnlineUsers", (userIds) => {
-        console.log("Received online users:", userIds); // 👈 debug
+        console.log("📡 Received online users:", userIds);
         set({ onlineUsers: userIds });
       });
 
@@ -106,7 +108,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Socket disconnect
+  // Ngắt kết nối socket
   disconnectSocket: () => {
     const { socket } = get();
     if (socket && socket.connected) {

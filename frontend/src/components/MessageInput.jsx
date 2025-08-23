@@ -1,12 +1,15 @@
 import React, { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { X, Image, Send, Loader2 } from "lucide-react";
+import { X, Image, Send, Loader2, Smile } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef(null);
+  const emojiPickerRef = useRef(null);
   const { sendMessage } = useChatStore();
 
   const handleImageChange = (e) => {
@@ -27,6 +30,12 @@ const MessageInput = () => {
     }
   };
 
+  const onEmojiClick = (emojiObject) => {
+    const emoji = emojiObject.emoji || emojiObject;
+    setText((prevText) => prevText + emoji);
+    setShowEmojiPicker(false);
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
@@ -39,6 +48,7 @@ const MessageInput = () => {
       });
       setText("");
       setImagePreview(null);
+      setShowEmojiPicker(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -48,6 +58,20 @@ const MessageInput = () => {
       setIsSending(false);
     }
   };
+
+  // Đóng emoji picker khi click ra ngoài
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="p-4 w-full">
@@ -71,8 +95,10 @@ const MessageInput = () => {
         </div>
       )}
 
+
+
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2">
+        <div className="flex-1 flex gap-2 relative">
           <input
             type="text"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
@@ -88,9 +114,36 @@ const MessageInput = () => {
             onChange={handleImageChange}
           />
 
+                     {/* Emoji Picker */}
+          <div className="relative" ref={emojiPickerRef}>
+                         <button
+               type="button"
+               className={`btn btn-circle btn-sm
+                        ${showEmojiPicker ? "text-emerald-500" : "text-zinc-400"}`}
+               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+               title="Emoji picker"
+             >
+               <Smile size={20} />
+             </button>
+            
+            {showEmojiPicker && (
+              <div className="absolute bottom-full right-0 mb-2 z-50">
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  width={300}
+                  height={400}
+                  searchPlaceholder="Tìm emoji..."
+                  previewConfig={{
+                    showPreview: false
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
+            className={`hidden sm:flex btn btn-circle btn-sm
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
           >

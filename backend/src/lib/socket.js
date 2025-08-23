@@ -33,16 +33,31 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   const userId = socket.handshake.query.userId;
-  if (userId) userSocketMap[userId] = socket.id;
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+    console.log("User online:", userId);
+  }
 
   // gửi danh sách user online
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  const onlineUserIds = Object.keys(userSocketMap);
+  console.log("Online users:", onlineUserIds);
+  io.emit("getOnlineUsers", onlineUserIds);
+
+  // Xử lý request lấy danh sách user online
+  socket.on("getOnlineUsers", (callback) => {
+    callback(Object.keys(userSocketMap));
+  });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
-    if (userId) delete userSocketMap[userId];
+    if (userId) {
+      delete userSocketMap[userId];
+      console.log("User offline:", userId);
+    }
 
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    const onlineUserIds = Object.keys(userSocketMap);
+    console.log("Online users after disconnect:", onlineUserIds);
+    io.emit("getOnlineUsers", onlineUserIds);
   });
 });
 

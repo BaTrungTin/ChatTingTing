@@ -9,6 +9,11 @@ export const protectRoute = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized - no token" });
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not defined in environment variables");
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       return res.status(401).json({ message: "Unauthorized - invalid token" });
@@ -23,6 +28,12 @@ export const protectRoute = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error in protectRoute middleware:", error.message);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: "Unauthorized - invalid token" });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Unauthorized - token expired" });
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 };
