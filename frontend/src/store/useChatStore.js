@@ -67,17 +67,13 @@ export const useChatStore = create((set, get) => ({
   },
 
   listenOnlineUsers: () => {
-    const socket = useAuthStore.getState().socket;
-    socket.on("getOnlineUsers", (onlineUserIds) => {
-      console.log("ChatStore received online users:", onlineUserIds);
-      // Refresh danh sách user khi có thay đổi online status
-      get().getUsers();
-    });
+    // This listener is removed to avoid conflicts with useAuthStore
+    // The online users should only be managed in useAuthStore
+    // We can listen to other events here if needed but not getOnlineUsers
   },
 
   notListenOnlineUsers: () => {
-    const socket = useAuthStore.getState().socket;
-    socket.off("getOnlineUsers");
+    // No longer needed since we removed the listener
   },
 
   setSelectedUser: (user) => set({ selectedUser: user }),
