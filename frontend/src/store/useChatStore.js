@@ -70,7 +70,7 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     socket.on("getOnlineUsers", (onlineUserIds) => {
       console.log("ChatStore received online users:", onlineUserIds);
-      // Refresh danh sách user khi có thay đổi online status
+      // Refresh danh sach khi co user online
       get().getUsers();
     });
   },

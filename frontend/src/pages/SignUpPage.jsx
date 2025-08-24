@@ -43,7 +43,6 @@ const SignUpPage = () => {
 
   return (
     <div className="min-h-screen flex items-start justify-center pt-32 bg-gradient-to-br from-purple-200 via-pink-200 to-indigo-200">
-      {/* Glassmorphic container, nhỏ gọn */}
       <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-sm border border-white/30">
         {/* Header */}
         <div className="text-center mb-6">
