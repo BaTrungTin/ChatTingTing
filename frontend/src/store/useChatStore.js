@@ -57,6 +57,7 @@ export const useChatStore = create((set, get) => ({
     if (!selectedUser) return;
     const socket = useAuthStore.getState().socket;
     socket.on("newMessage", (newMessage) => {
+      if (newMessage.senderId !== selectedUser._id) return;
       set({ messages: [...get().messages, newMessage] });
     });
   },
@@ -71,6 +72,7 @@ export const useChatStore = create((set, get) => ({
     socket.on("getOnlineUsers", (onlineUserIds) => {
       console.log("ChatStore received online users:", onlineUserIds);
       // Refresh danh sach khi co user online
+
       get().getUsers();
     });
   },
