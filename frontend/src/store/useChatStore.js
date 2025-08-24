@@ -78,19 +78,37 @@ export const useChatStore = create((set, get) => ({
       const { selectedUser, unreadMessages } = get();
       const currentUserId = useAuthStore.getState().authUser?._id;
       
-      // Determine who the message is from/to
-      const messageFromUserId = newMessage.senderId === currentUserId 
-        ? newMessage.receiverId 
-        : newMessage.senderId;
+      console.log("🔍 New message received:", {
+        senderId: newMessage.senderId,
+        receiverId: newMessage.receiverId,
+        currentUserId: currentUserId,
+        selectedUserId: selectedUser?._id,
+        selectedUserName: selectedUser?.fullName
+      });
       
-      // If we're currently chatting with this user, add to current messages
-      if (selectedUser && selectedUser._id === messageFromUserId) {
+      // Check if this message belongs to the current conversation
+      const isCurrentConversation = selectedUser && (
+        (newMessage.senderId === currentUserId && newMessage.receiverId === selectedUser._id) ||
+        (newMessage.senderId === selectedUser._id && newMessage.receiverId === currentUserId)
+      );
+      
+      if (isCurrentConversation) {
+        // Add to current chat messages
+        console.log("✅ Adding to current conversation");
         set({ messages: [...get().messages, newMessage] });
       } else {
-        // Otherwise, increment unread count for this user
-        const newUnreadMessages = { ...unreadMessages };
-        newUnreadMessages[messageFromUserId] = (newUnreadMessages[messageFromUserId] || 0) + 1;
-        set({ unreadMessages: newUnreadMessages });
+        // Determine which user to increment unread count for
+        const otherUserId = newMessage.senderId === currentUserId 
+          ? newMessage.receiverId 
+          : newMessage.senderId;
+        
+        // Only increment if it's not from current user (avoid self-notification)
+        if (newMessage.senderId !== currentUserId) {
+          console.log("📨 Adding to unread count for user:", otherUserId);
+          const newUnreadMessages = { ...unreadMessages };
+          newUnreadMessages[otherUserId] = (newUnreadMessages[otherUserId] || 0) + 1;
+          set({ unreadMessages: newUnreadMessages });
+        }
       }
     });
   },
