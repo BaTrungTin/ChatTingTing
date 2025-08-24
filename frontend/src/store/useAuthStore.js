@@ -107,15 +107,26 @@ export const useAuthStore = create((set, get) => ({
       });
 
       set({ socket: newSocket });
+      
+      // Start listening for messages immediately when socket connects
+      const { useChatStore } = await import("./useChatStore");
+      useChatStore.getState().listenMessages();
     }
   },
 
   // Ngắt kết nối socket
-  disconnectSocket: () => {
+  disconnectSocket: async () => {
     const { socket } = get();
     if (socket && socket.connected) {
+      // Stop listening for messages before disconnecting
+      const { useChatStore } = await import("./useChatStore");
+      useChatStore.getState().notListenMessages();
+      
       socket.disconnect();
       set({ socket: null, onlineUsers: [] });
+      
+      // Clear unread messages when disconnecting
+      useChatStore.setState({ unreadMessages: {} });
     }
   },
 }));
