@@ -11,8 +11,6 @@ const ChatContainer = () => {
     getMessages,
     isMessagesLoading,
     selectedUser,
-    listenMessages,
-    notListenMessages,
   } = useChatStore();
   const { authUser } = useAuthStore();
 
@@ -21,11 +19,8 @@ const ChatContainer = () => {
   useEffect(() => {
     if (selectedUser?._id) {
       getMessages(selectedUser._id);
-      listenMessages();
-
-      return () => notListenMessages();
     }
-  }, [selectedUser?._id, getMessages, listenMessages, notListenMessages]);
+  }, [selectedUser?._id, getMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {

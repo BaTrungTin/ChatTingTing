@@ -13,6 +13,7 @@ const Sidebar = () => {
     isUsersLoading,
     listenOnlineUsers,
     notListenOnlineUsers,
+    getUnreadCount,
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
@@ -44,6 +45,7 @@ const Sidebar = () => {
           users.map((user) => {
             // Ép cả 2 về string để so sánh chắc chắn
             const isOnline = onlineUsers.includes(user._id?.toString());
+            const unreadCount = getUnreadCount(user._id);
 
             return (
               <button
@@ -67,8 +69,15 @@ const Sidebar = () => {
                   )}
                 </div>
 
-                <div className="hidden lg:block text-left min-w-0">
-                  <div className="font-medium truncate">{user.fullName}</div>
+                <div className="hidden lg:block text-left min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium truncate">{user.fullName}</div>
+                    {unreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center ml-2">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </button>
             );

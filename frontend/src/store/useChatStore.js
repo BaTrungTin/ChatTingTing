@@ -9,6 +9,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  unreadMessages: {}, // Track unread messages per user: { userId: count }
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -27,6 +28,12 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
+      
+      // Clear unread count for this user
+      const { unreadMessages } = get();
+      const newUnreadMessages = { ...unreadMessages };
+      delete newUnreadMessages[userId];
+      set({ unreadMessages: newUnreadMessages });
     } catch (error) {
       toast.error(error.response?.data?.message);
     } finally {
@@ -53,11 +60,27 @@ export const useChatStore = create((set, get) => ({
   },
 
   listenMessages: () => {
-    const { selectedUser } = get();
-    if (!selectedUser) return;
     const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+    
     socket.on("newMessage", (newMessage) => {
-      set({ messages: [...get().messages, newMessage] });
+      const { selectedUser, unreadMessages } = get();
+      const currentUserId = useAuthStore.getState().authUser?._id;
+      
+      // Determine who the message is from/to
+      const messageFromUserId = newMessage.senderId === currentUserId 
+        ? newMessage.receiverId 
+        : newMessage.senderId;
+      
+      // If we're currently chatting with this user, add to current messages
+      if (selectedUser && selectedUser._id === messageFromUserId) {
+        set({ messages: [...get().messages, newMessage] });
+      } else {
+        // Otherwise, increment unread count for this user
+        const newUnreadMessages = { ...unreadMessages };
+        newUnreadMessages[messageFromUserId] = (newUnreadMessages[messageFromUserId] || 0) + 1;
+        set({ unreadMessages: newUnreadMessages });
+      }
     });
   },
 
@@ -76,5 +99,21 @@ export const useChatStore = create((set, get) => ({
     // No longer needed since we removed the listener
   },
 
-  setSelectedUser: (user) => set({ selectedUser: user }),
+  setSelectedUser: (user) => {
+    set({ selectedUser: user });
+    
+    // Clear unread count when selecting a user
+    if (user) {
+      const { unreadMessages } = get();
+      const newUnreadMessages = { ...unreadMessages };
+      delete newUnreadMessages[user._id];
+      set({ unreadMessages: newUnreadMessages });
+    }
+  },
+
+  // Helper function to get unread count for a user
+  getUnreadCount: (userId) => {
+    const { unreadMessages } = get();
+    return unreadMessages[userId] || 0;
+  },
 }));
