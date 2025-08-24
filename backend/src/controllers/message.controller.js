@@ -7,10 +7,14 @@ import cloudinary from "../lib/cloudinary.js";
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
+    console.log("🔍 Getting users for sidebar, current user ID:", loggedInUserId);
 
     const filteredUsers = await User.find({
       _id: { $ne: loggedInUserId },
     }).select("-password");
+
+    console.log("🔍 Filtered users count:", filteredUsers.length);
+    console.log("🔍 User IDs:", filteredUsers.map(u => u._id.toString()));
 
     res.status(200).json(filteredUsers);
   } catch (error) {

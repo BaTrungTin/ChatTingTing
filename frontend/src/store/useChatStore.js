@@ -15,7 +15,18 @@ export const useChatStore = create((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/user");
-      set({ users: res.data });
+      const currentUserId = useAuthStore.getState().authUser?._id;
+      
+      // Double-check: filter out current user on frontend too
+      const filteredUsers = res.data.filter(user => 
+        user._id.toString() !== currentUserId?.toString()
+      );
+      
+      console.log("🔍 Frontend: Current user ID:", currentUserId);
+      console.log("🔍 Frontend: Users from API:", res.data.length);
+      console.log("🔍 Frontend: Filtered users:", filteredUsers.length);
+      
+      set({ users: filteredUsers });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to fetch users");
     } finally {
