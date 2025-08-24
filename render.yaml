@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: chat-ting-ting-app
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URL
+        sync: false  # You'll need to add this manually in Render dashboard
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: chat-ting-ting-app
+          property: host
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  # Optional - you'll need to add this manually if using image uploads
+      - key: CLOUDINARY_API_KEY
+        sync: false  # Optional - you'll need to add this manually if using image uploads
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # Optional - you'll need to add this manually if using image uploads
