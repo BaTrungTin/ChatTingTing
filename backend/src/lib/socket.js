@@ -48,6 +48,23 @@ io.on("connection", (socket) => {
     callback(Object.keys(userSocketMap));
   });
 
+  // Join/leave group rooms for realtime
+  socket.on("joinGroups", (groupIds = []) => {
+    try {
+      groupIds.forEach((gid) => socket.join(`group:${gid}`));
+    } catch (e) {
+      console.log("joinGroups error", e.message);
+    }
+  });
+
+  socket.on("leaveGroupRoom", (groupId) => {
+    try {
+      socket.leave(`group:${groupId}`);
+    } catch (e) {
+      console.log("leaveGroupRoom error", e.message);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
     if (userId) {

@@ -11,6 +11,7 @@ const ChatContainer = () => {
     getMessages,
     isMessagesLoading,
     selectedUser,
+    selectedGroup,
     listenMessages,
     notListenMessages,
   } = useChatStore();
@@ -20,12 +21,16 @@ const ChatContainer = () => {
 
   useEffect(() => {
     if (selectedUser?._id) {
-      getMessages(selectedUser._id);
+      getMessages(selectedUser._id, "dm");
       listenMessages();
-
       return () => notListenMessages();
     }
-  }, [selectedUser?._id, getMessages, listenMessages, notListenMessages]);
+    if (selectedGroup?._id) {
+      getMessages(selectedGroup._id, "group");
+      listenMessages();
+      return () => notListenMessages();
+    }
+  }, [selectedUser?._id, selectedGroup?._id, getMessages, listenMessages, notListenMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -67,7 +72,9 @@ const ChatContainer = () => {
                   src={
                     message.senderId === authUser._id
                       ? authUser.profilePic || "/avatar.png"
-                      : selectedUser.profilePic || "/avatar.png"
+                      : selectedGroup
+                        ? "/avatar.png"
+                        : selectedUser.profilePic || "/avatar.png"
                   }
                   alt="profile pic"
                 />
@@ -78,7 +85,7 @@ const ChatContainer = () => {
                 {formatMessageTime(message.createdAt)}
               </time>
             </div>
-            <div className="chat-bubble flex flex-col">
+            <div className={`chat-bubble flex flex-col ${message.groupId && !message.image && message.text?.startsWith("👋") ? "bg-base-200 text-base-content" : ""}`}>
               {message.image && (
                 <img
                   src={message.image}
